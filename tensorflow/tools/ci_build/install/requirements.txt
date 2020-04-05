@@ -1,0 +1,27 @@
+#upgrade
+pip
+setuptools==39.1.0
+virtualenv
+absl-py
+six==1.10.0
+protobuf==3.6.1
+#--no-binary=:all: --upgrade numpy==1.14.5
+# Eager-to-graph execution needs astor, gast and termcolor:
+astor
+gast
+termcolor
+h5py==2.8.0
+
+#noo upgrade
+scipy==1.4.1
+scikit-learn==0.19.1
+pandas==0.19.2
+gnureadline
+bz2file
+wheel==0.29.0
+portpicker
+werkzeug
+grpcio
+keras_preprocessing==1.0.5
+
+
