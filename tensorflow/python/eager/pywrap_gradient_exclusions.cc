@@ -50,7 +50,7 @@ auto OpGradientInfoInit(const T &a) {
 
 absl::optional<tensorflow::gtl::FlatSet<int>> OpGradientUnusedInputIndices(
     const tensorflow::string &op_name) {
-  static std::array<OpIndexInfo, 348> a = {{
+  static std::array<OpIndexInfo, 352> a = {{
       {"Acosh"},
       {"AllToAll", 1, {0}},
       {"ApproximateEqual"},
@@ -152,6 +152,7 @@ absl::optional<tensorflow::gtl::FlatSet<int>> OpGradientUnusedInputIndices(
       {"IdentityReader"},
       {"Imag"},
       {"ImageProjectiveTransformV2", 1, {2}},
+      {"ImageProjectiveTransformV3", 2, {2, 3}},
       {"ImageSummary"},
       {"InitializeTable"},
       {"InitializeTableFromTextFile"},
@@ -160,6 +161,7 @@ absl::optional<tensorflow::gtl::FlatSet<int>> OpGradientUnusedInputIndices(
       {"Inv"},
       {"Invert"},
       {"InvertPermutation"},
+      {"IsotonicRegression"},
       {"LMDBReader"},
       {"LeakyReluGrad", 1, {0}},
       {"LeftShift"},
@@ -222,7 +224,6 @@ absl::optional<tensorflow::gtl::FlatSet<int>> OpGradientUnusedInputIndices(
       {"PlaceholderWithDefault"},
       {"PopulationCount"},
       {"PreventGradient"},
-      {"Qr"},
       {"QuantizeAndDequantize"},
       {"QuantizeAndDequantizeV2"},
       {"QuantizeAndDequantizeV3"},
@@ -325,7 +326,9 @@ absl::optional<tensorflow::gtl::FlatSet<int>> OpGradientUnusedInputIndices(
       {"StackClose"},
       {"StackPop"},
       {"StackPush"},
+      {"StatelessCase"},
       {"StatelessMultinomial"},
+      {"StatelessParameterizedTruncatedNormal", 1, {1}},
       {"StatelessRandomBinomial"},
       {"StatelessRandomGammaV2", 1, {1}},
       {"StatelessRandomNormal"},
@@ -380,6 +383,7 @@ absl::optional<tensorflow::gtl::FlatSet<int>> OpGradientUnusedInputIndices(
       {"TensorScatterAdd", 2, {0, 2}},
       {"TensorScatterSub", 2, {0, 2}},
       {"TensorScatterUpdate", 1, {0}},
+      {"TensorStridedSliceUpdate", 2, {0, 4}},
       {"TensorSummary"},
       {"TensorSummaryV2"},
       {"TextLineReader"},
@@ -411,7 +415,7 @@ absl::optional<tensorflow::gtl::FlatSet<int>> OpGradientUnusedInputIndices(
 
 absl::optional<tensorflow::gtl::FlatSet<int>> OpGradientUnusedOutputIndices(
     const tensorflow::string &op_name) {
-  static std::array<OpIndexInfo, 461> a = {{
+  static std::array<OpIndexInfo, 468> a = {{
       {"Abs"},
       {"AccumulateNV2"},
       {"Acos"},
@@ -443,6 +447,10 @@ absl::optional<tensorflow::gtl::FlatSet<int>> OpGradientUnusedOutputIndices(
       {"BatchNormWithGlobalNormalization"},
       {"BatchToSpace"},
       {"BatchToSpaceND"},
+      {"BesselI0"},
+      {"BesselJ0"},
+      {"BesselK0"},
+      {"BesselY0"},
       {"Betainc"},
       {"BiasAdd"},
       {"BiasAddGrad"},
@@ -563,6 +571,7 @@ absl::optional<tensorflow::gtl::FlatSet<int>> OpGradientUnusedOutputIndices(
       {"Igammac"},
       {"Imag"},
       {"ImageProjectiveTransformV2"},
+      {"ImageProjectiveTransformV3"},
       {"ImageSummary"},
       {"InitializeTable"},
       {"InitializeTableFromTextFile"},
@@ -571,6 +580,7 @@ absl::optional<tensorflow::gtl::FlatSet<int>> OpGradientUnusedOutputIndices(
       {"InvGrad"},
       {"Invert"},
       {"InvertPermutation"},
+      {"IsotonicRegression", 1, {0}},
       {"L2Loss"},
       {"LMDBReader"},
       {"LeakyRelu"},
@@ -846,6 +856,7 @@ absl::optional<tensorflow::gtl::FlatSet<int>> OpGradientUnusedOutputIndices(
       {"TensorScatterAdd"},
       {"TensorScatterSub"},
       {"TensorScatterUpdate"},
+      {"TensorStridedSliceUpdate"},
       {"TensorSummary"},
       {"TensorSummaryV2"},
       {"TextLineReader"},

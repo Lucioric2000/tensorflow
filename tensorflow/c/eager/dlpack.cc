@@ -109,7 +109,8 @@ DLDataType GetDlDataType(TF_DataType data_type, TF_Status* status) {
 // Gets DLPack's DLContext from eager tensor handle.
 DLContext GetDlContext(TFE_TensorHandle* h, TF_Status* status) {
   DLContext ctx;
-  const char* device_name = tensorflow::unwrap(h)->DeviceName(&status->status);
+  const char* device_name =
+      tensorflow::unwrap(h)->BackingDeviceName(&status->status);
   DeviceNameUtils::ParsedName parsed_name;
   tensorflow::DeviceNameUtils::ParseFullName(device_name, &parsed_name);
   std::string device_type = parsed_name.type;
@@ -221,8 +222,7 @@ Status TfDataTypeFormDlDataType(const DLDataType& dtype,
 // Wraps the deleter function of DLManagedTensor to match the function signature
 // TFE_NewTensorHandleFromDeviceMemory.
 void DeallocatorWrapperFunc(void* data, size_t len, void* dlmt_vptr) {
-  DLManagedTensor* dlmt = static_cast<DLManagedTensor*>(dlmt_vptr);
-  dlmt->deleter(const_cast<DLManagedTensor*>(dlmt));
+  TFE_CallDLManagedTensorDeleter(dlmt_vptr);
 }
 
 // Checks whether the stride array matches the layout of compact, row-majored
@@ -324,7 +324,7 @@ TFE_TensorHandle* TFE_HandleFromDLPack(void* dlm, TF_Status* status,
 
   TFE_TensorHandle* handle = TFE_NewTensorHandleFromDeviceMemory(
       ctx, device_name.value().c_str(), dtype, dims, num_dims, data,
-      total_bytes, &DeallocatorWrapperFunc, &dlmt, status);
+      total_bytes, &DeallocatorWrapperFunc, dlmt, status);
 
   return handle;
 }

@@ -94,6 +94,20 @@ class OpsSet(enum.Enum):
   # quantized implementations.
   TFLITE_BUILTINS_INT8 = "TFLITE_BUILTINS_INT8"
 
+  # Convert model using only TensorFlow Lite operations with quantized int8
+  # weights, int16 activations and int64 bias.
+  # Specifying this will throw an error for operations that do not yet have
+  # quantized implementations.
+  # This quantization mode may be used in models for super-resolution,
+  # audio signal processing or image de-noising. It improves accuracy
+  # significantly, but only slightly increases the model size.
+  # WARNING: These ops are currently experimental and have not yet been
+  # finalized.
+  # They are only compatible with CPU execution, and have not been optimized for
+  # production.
+  EXPERIMENTAL_TFLITE_BUILTINS_ACTIVATIONS_INT16_WEIGHTS_INT8 = \
+    "EXPERIMENTAL_TFLITE_BUILTINS_ACTIVATIONS_INT16_WEIGHTS_INT8"
+
   def __str__(self):
     return self.value
 
@@ -108,15 +122,19 @@ class ConverterError(Exception):
   pass
 
 
-def mlir_quantize(input_data_str, disable_per_channel=False,
+def mlir_quantize(input_data_str,
+                  disable_per_channel=False,
+                  fully_quantize=False,
                   inference_type=_types_pb2.INT8):
   """Quantize `input_data_str` with calibration results.
 
   Args:
     input_data_str: Input data in serialized form (e.g. a TFLITE model with
-                    calibration results).
-    disable_per_channel: Bool indicating whether to do per-channel or
-                         per-tensor quantization
+      calibration results).
+    disable_per_channel: Bool indicating whether to do per-channel or per-tensor
+      quantization
+    fully_quantize: Bool indicating whether to fully quantize the model. Besides
+      model body, the input/output will be quantized as well.
     inference_type: Data type for the activations. The default value is int8.
 
   Returns:
@@ -125,6 +143,7 @@ def mlir_quantize(input_data_str, disable_per_channel=False,
   """
   return wrap_toco.wrapped_experimental_mlir_quantize(input_data_str,
                                                       disable_per_channel,
+                                                      fully_quantize,
                                                       inference_type)
 
 
@@ -409,10 +428,9 @@ def build_toco_convert_protos(input_tensors,
   if conversion_summary_dir:
     toco.conversion_summary_dir = conversion_summary_dir
   if target_ops:
-    if set(target_ops) == set([OpsSet.TFLITE_BUILTINS, OpsSet.SELECT_TF_OPS]):
+    if OpsSet.SELECT_TF_OPS in set(target_ops):
       toco.enable_select_tf_ops = True
-    elif set(target_ops) == set([OpsSet.SELECT_TF_OPS]):
-      toco.enable_select_tf_ops = True
+    if set(target_ops) == set([OpsSet.SELECT_TF_OPS]):
       toco.force_select_tf_ops = True
 
   model = _model_flags_pb2.ModelFlags()

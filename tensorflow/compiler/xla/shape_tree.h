@@ -385,8 +385,8 @@ class ShapeTreeIterator
   bool operator!=(const ShapeTreeIterator& other) const {
     return node_ != other.node_;
   }
-  ValueType& operator*() { return node_->data; }
-  ValueType* operator->() { return &node_->data; }
+  ValueType& operator*() const { return node_->data; }
+  ValueType* operator->() const { return &node_->data; }
 
  private:
   ContainerType* nodes_;
@@ -648,7 +648,9 @@ void ShapeTree<T>::CopySubtreeFrom(const ShapeTree<T>& other,
                                    const ShapeIndex& target_base_index) {
   CHECK(ShapeUtil::Compatible(
       ShapeUtil::GetSubshape(shape(), target_base_index),
-      ShapeUtil::GetSubshape(other.shape(), source_base_index)));
+      ShapeUtil::GetSubshape(other.shape(), source_base_index)))
+      << ShapeUtil::GetSubshape(shape(), target_base_index) << " vs "
+      << ShapeUtil::GetSubshape(other.shape(), source_base_index);
   ForEachMutableElement([this, &other, &source_base_index, &target_base_index](
                             const ShapeIndex& index, T* data) {
     // Copy the data element only if index is in the

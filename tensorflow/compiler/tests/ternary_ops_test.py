@@ -77,7 +77,6 @@ class TernaryOpsTest(xla_test.XLATestCase, parameterized.TestCase):
         np.int32(2),
         expected=np.array([1, 3, 5], dtype=np.int32))
 
-  @test_util.disable_mlir_bridge('TODO(b/155949336)')
   def testSelect(self):
     for dtype in self.numeric_types:
       self._testTernary(
@@ -215,7 +214,6 @@ class TernaryOpsTest(xla_test.XLATestCase, parameterized.TestCase):
             upper,
             expected=np.minimum(np.maximum(x, lower), upper))
 
-  @test_util.disable_mlir_bridge('Enable tf.Betainc Compilation')
   def testBetaincSanity(self):
     # This operation is only supported for float32 and float64.
     for dtype in self.numeric_types & {np.float32, np.float64}:
@@ -253,7 +251,6 @@ class TernaryOpsTest(xla_test.XLATestCase, parameterized.TestCase):
           'atol': 2e-4
       },
   )
-  @test_util.disable_mlir_bridge('Enable tf.Betainc Compilation')
   def testBetainc(self, sigma, rtol, atol):
     # This operation is only supported for float32 and float64.
     for dtype in self.numeric_types & {np.float32, np.float64}:
