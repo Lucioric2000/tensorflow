@@ -33,10 +33,6 @@ tf_module {
     mtype: "<type \'type\'>"
   }
   member_method {
-    name: "convert_all_kernels_in_model"
-    argspec: "args=[\'model\'], varargs=None, keywords=None, defaults=None"
-  }
-  member_method {
     name: "deserialize_keras_object"
     argspec: "args=[\'identifier\', \'module_objects\', \'custom_objects\', \'printable_module_name\'], varargs=None, keywords=None, defaults=[\'None\', \'None\', \'object\'], "
   }
@@ -62,7 +58,7 @@ tf_module {
   }
   member_method {
     name: "model_to_dot"
-    argspec: "args=[\'model\', \'show_shapes\', \'show_layer_names\', \'rankdir\', \'expand_nested\', \'dpi\', \'subgraph\'], varargs=None, keywords=None, defaults=[\'False\', \'True\', \'TB\', \'False\', \'96\', \'False\'], "
+    argspec: "args=[\'model\', \'show_shapes\', \'show_dtype\', \'show_layer_names\', \'rankdir\', \'expand_nested\', \'dpi\', \'subgraph\'], varargs=None, keywords=None, defaults=[\'False\', \'False\', \'True\', \'TB\', \'False\', \'96\', \'False\'], "
   }
   member_method {
     name: "multi_gpu_model"
@@ -74,7 +70,7 @@ tf_module {
   }
   member_method {
     name: "plot_model"
-    argspec: "args=[\'model\', \'to_file\', \'show_shapes\', \'show_layer_names\', \'rankdir\', \'expand_nested\', \'dpi\'], varargs=None, keywords=None, defaults=[\'model.png\', \'False\', \'True\', \'TB\', \'False\', \'96\'], "
+    argspec: "args=[\'model\', \'to_file\', \'show_shapes\', \'show_dtype\', \'show_layer_names\', \'rankdir\', \'expand_nested\', \'dpi\'], varargs=None, keywords=None, defaults=[\'model.png\', \'False\', \'False\', \'True\', \'TB\', \'False\', \'96\'], "
   }
   member_method {
     name: "register_keras_serializable"

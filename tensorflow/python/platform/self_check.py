@@ -20,6 +20,7 @@ from __future__ import print_function
 
 import os
 
+MSVCP_DLL_NAMES = "msvcp_dll_names"
 
 try:
   from tensorflow.python.platform import build_info

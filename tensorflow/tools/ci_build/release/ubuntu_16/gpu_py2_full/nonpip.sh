@@ -19,8 +19,8 @@ set -x
 source tensorflow/tools/ci_build/release/common.sh
 
 install_ubuntu_16_pip_deps pip2.7
-# Install bazelisk
-install_bazelisk
+# Update bazel
+update_bazel_linux
 
 # Run configure.
 export TF_NEED_GCP=1
@@ -43,9 +43,8 @@ yes "" | "$PYTHON_BIN_PATH" configure.py
 # Get the default test targets for bazel.
 source tensorflow/tools/ci_build/build_scripts/PRESUBMIT_BUILD_TARGETS.sh
 
-tag_filters="gpu,requires-gpu,-no_gpu,-no_oss,-oss_serial,-no_oss_py2"
+tag_filters="gpu,requires-gpu,-no_gpu,-nogpu,-no_oss,-oss_serial,-no_oss_py2"
 
-set +e
 bazel test --config=cuda --config=opt \
   --crosstool_top=//third_party/toolchains/preconfig/ubuntu16.04/gcc7_manylinux2010-nvcc-cuda10.1:toolchain \
   --linkopt=-lrt \
@@ -57,4 +56,3 @@ bazel test --config=cuda --config=opt \
   --test_output=errors --verbose_failures=true --keep_going \
   --run_under=//tensorflow/tools/ci_build/gpu_build:parallel_gpu_execute \
   -- ${DEFAULT_BAZEL_TARGETS} -//tensorflow/lite/...
-test_xml_summary_exit

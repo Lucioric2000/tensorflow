@@ -165,6 +165,16 @@ PrecisionConfig HloTestBase::DefaultPrecisionConfig(int operands) {
   return precision_config;
 }
 
+void HloTestBase::SetAotFastMathDebugOptions(DebugOptions* options) {
+  options->set_xla_cpu_enable_fast_math(true);
+  options->set_xla_gpu_enable_fast_min_max(true);
+  options->set_xla_cpu_enable_fast_min_max(true);
+  options->set_xla_cpu_fast_math_honor_nans(false);
+  options->set_xla_cpu_fast_math_honor_infs(false);
+  options->set_xla_cpu_fast_math_honor_functions(false);
+  options->set_xla_cpu_fast_math_honor_division(false);
+}
+
 DebugOptions HloTestBase::GetDebugOptionsForTest() {
   auto debug_options = GetDebugOptionsFromFlags();
   // TODO(b/38354253): Change tests to use Parameters instead of Constants.
@@ -218,6 +228,19 @@ StatusOr<std::vector<Literal>> HloTestBase::ExecuteReplicated(
   }
   return test_runner_.ExecuteReplicated(std::move(module), options,
                                         device_assignment);
+}
+
+StatusOr<std::vector<Literal>> HloTestBase::ExecuteReplicated(
+    std::function<Executable*(int64)> executable_provider,
+    std::function<int64(int64)> argument_count_provider,
+    std::function<const Literal*(int64, int64)> argument_provider,
+    int64 num_replicas, bool run_hlo_passes) {
+  HloRunner::ReplicatedExecuteOptions options;
+  options.num_replicas = num_replicas;
+  options.run_hlo_passes = run_hlo_passes;
+  options.use_threads = true;
+  return test_runner_.ExecuteReplicated(
+      executable_provider, argument_count_provider, argument_provider, options);
 }
 
 StatusOr<std::unique_ptr<HloModule>> HloTestBase::MakeReferenceModule(
@@ -411,9 +434,6 @@ StatusOr<::testing::AssertionResult> HloTestBase::RunAndCompareInternal(
         std::move(module_or_status.ValueOrDie());
 
     fake_arguments[i] = MakeFakeArguments(module.get()).ConsumeValueOrDie();
-    absl::c_transform(
-        fake_arguments[i], std::back_inserter(fake_argument_ptrs[i]),
-        [](const Literal& literal) { return const_cast<Literal*>(&literal); });
 
     if (profiles != nullptr) {
       // We have to enable HLO profiling since otherwise currently the
@@ -447,7 +467,7 @@ StatusOr<::testing::AssertionResult> HloTestBase::RunAndCompareInternal(
   absl::optional<Literal> canonical_output;
   for (int i = 0; i < n; ++i) {
     StatusOr<Literal> output =
-        test_runner_.Execute(std::move(executables[i]), fake_argument_ptrs[i],
+        test_runner_.Execute(std::move(executables[i]), fake_arguments[i],
                              /*profile=*/&((*profiles)[i]));
     if (!output.ok()) {
       return ::testing::AssertionFailure() << output.status().error_message();

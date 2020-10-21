@@ -21,11 +21,12 @@ limitations under the License.
 #include <cmath>
 
 #include <algorithm>
+#include <cmath>
 #include <type_traits>
 
 #include "third_party/eigen3/unsupported/Eigen/CXX11/Tensor"
-#include "tensorflow/core/lib/bfloat16/bfloat16.h"
 #include "tensorflow/core/lib/random/philox_random.h"
+#include "tensorflow/core/platform/types.h"
 
 namespace tensorflow {
 namespace random {

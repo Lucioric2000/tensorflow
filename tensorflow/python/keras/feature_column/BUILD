@@ -10,13 +10,33 @@ package(
 
 exports_files(["LICENSE"])
 
+filegroup(
+    name = "all_py_srcs",
+    srcs = glob(["*.py"]),
+    visibility = ["//tensorflow/python/keras/google/private_tf_api_test:__pkg__"],
+)
+
 py_library(
     name = "feature_column",
     srcs = ["__init__.py"],
     deps = [
+        ":base_feature_layer",
         ":dense_features",
         ":dense_features_v2",
         ":sequence_feature_column",
+        "//tensorflow/python/keras:combinations",
+    ],
+)
+
+py_library(
+    name = "base_feature_layer",
+    srcs = ["base_feature_layer.py"],
+    deps = [
+        "//tensorflow/python:array_ops",
+        "//tensorflow/python:variable_scope",
+        "//tensorflow/python/feature_column:feature_column_v2",
+        "//tensorflow/python/keras/engine:base_layer",
+        "//tensorflow/python/keras/utils:generic_utils",
     ],
 )
 
@@ -26,6 +46,7 @@ py_library(
         "dense_features.py",
     ],
     deps = [
+        ":base_feature_layer",
         "//tensorflow/python:framework_ops",
         "//tensorflow/python:tf_export",
         "//tensorflow/python:util",
@@ -40,10 +61,12 @@ py_library(
         "dense_features_v2.py",
     ],
     deps = [
+        ":base_feature_layer",
         ":dense_features",
         "//tensorflow/python:framework_ops",
         "//tensorflow/python:tf_export",
         "//tensorflow/python/feature_column:feature_column_v2",
+        "//tensorflow/python/keras:combinations",
     ],
 )
 
@@ -98,6 +121,7 @@ py_library(
     name = "sequence_feature_column",
     srcs = ["sequence_feature_column.py"],
     deps = [
+        ":base_feature_layer",
         "//tensorflow/python:array_ops",
         "//tensorflow/python:check_ops",
         "//tensorflow/python:framework_ops",

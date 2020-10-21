@@ -55,8 +55,7 @@ class DynamicDimensionInference {
   // go into tuples.
   bool HasDynamicDimension(HloInstruction* inst) const;
 
-  // Forward dynamic dimension size at `dim` and its constraint from `inst` to
-  // `new_inst`.
+  // Forward dynamic dimension size at `dim` from `inst` to `new_inst`.
   Status ForwardDynamicSize(HloInstruction* inst, HloInstruction* new_inst,
                             const ShapeIndex& index);
 
@@ -64,9 +63,12 @@ class DynamicDimensionInference {
   // `inst` at `index` has a dynamic size, and its runtime size is represented
   // by a scalar instruction `size`.
   void SetDynamicSize(HloInstruction* inst, const ShapeIndex& index, int64 dim,
-                      HloInstruction* size) {
-    SetDynamicSize(inst, index, dim, size, DimensionConstraint(1, 1));
-  }
+                      HloInstruction* size);
+
+  // For all tensors whose dynamic dimension is `replace`, replace them with
+  // `with`.
+  void ReplaceAllDynamicDimensionUsesWith(HloInstruction* replace,
+                                          HloInstruction* with);
 
   friend class DynamicDimensionInferenceVisitor;
 

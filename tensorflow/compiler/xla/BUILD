@@ -120,14 +120,19 @@ cc_library(
     ],
     hdrs = [
         "comparison_util.h",
+        "primitive_util.h",
     ],
     visibility = [":friends"],
     deps = [
+        ":status_macros",
         ":statusor",
         ":types",
         ":util",
+        ":xla_data_proto_cc",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/types:optional",
     ],
 )
 
@@ -332,6 +337,7 @@ cc_library(
         "//tensorflow/core:lib",
         "//tensorflow/core:lib_internal",
         "//tensorflow/core:regexp_internal",
+        "@com_google_absl//absl/algorithm:container",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/container:inlined_vector",
         "@com_google_absl//absl/strings",
@@ -962,6 +968,11 @@ tf_cc_test(
         ":types",
         "//tensorflow/core:test_main",
     ],
+)
+
+cc_library(
+    name = "union_find",
+    hdrs = ["union_find.h"],
 )
 
 # -----------------------------------------------------------------------------

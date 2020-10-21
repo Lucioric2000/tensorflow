@@ -94,12 +94,6 @@ pip3 install psutil
 pip2 install py-cpuinfo
 pip3 install py-cpuinfo
 
-# pylint==1.6.4 requires python-astroid (>= 1.4.5) requires lazy-object-proxy
-# Latest version of lazy-object-proxy (1.4.2) fails to install from source
-# when using setuptools 39.1.0
-pip2 install lazy-object-proxy==1.4.1
-pip3 install lazy-object-proxy==1.4.1
-
 # pylint tests require the following:
 pip2 install --no-use-pep517 pylint==1.6.4
 pip3 install --no-use-pep517 pylint==1.6.4
@@ -147,3 +141,8 @@ pip3 install --upgrade argparse
 # tree
 pip2 install dm-tree
 pip3 install dm-tree
+
+# tf.distribute multi worker tests require the following:
+# Those tests are Python3 only.
+pip3 install --upgrade dill
+pip3 install --upgrade tblib

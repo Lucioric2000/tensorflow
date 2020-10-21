@@ -20,6 +20,7 @@ from __future__ import print_function
 
 from tensorflow.python.feature_column import feature_column_v2 as fc
 from tensorflow.python.framework import ops
+from tensorflow.python.keras.feature_column import base_feature_layer as kfc
 from tensorflow.python.keras.feature_column import dense_features
 from tensorflow.python.util.tf_export import keras_export
 
@@ -88,8 +89,8 @@ class DenseFeatures(dense_features.DenseFeatures):
 
   def build(self, _):
     for column in self._feature_columns:
-      with ops.name_scope(column.name):
+      with ops.name_scope_v2(column.name):
         column.create_state(self._state_manager)
     # We would like to call Layer.build and not _DenseFeaturesHelper.build.
     # pylint: disable=protected-access
-    super(fc._BaseFeaturesLayer, self).build(None)  # pylint: disable=bad-super-call
+    super(kfc._BaseFeaturesLayer, self).build(None)  # pylint: disable=bad-super-call

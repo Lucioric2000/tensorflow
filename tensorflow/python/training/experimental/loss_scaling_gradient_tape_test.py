@@ -154,7 +154,7 @@ class LossScaleGradientTapeTest(test.TestCase, parameterized.TestCase):
       y = x * x
       z = y * y
     g.gradient(z, x)
-    with self.assertRaisesRegexp(RuntimeError, 'persistent'):
+    with self.assertRaisesRegex(RuntimeError, 'persistent'):
       g.gradient(y, x)
 
   @test_combinations.generate(test_combinations.combine(

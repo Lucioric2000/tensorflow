@@ -49,6 +49,7 @@ from tensorflow.python.ops import random_ops
 from tensorflow.python.ops import script_ops
 from tensorflow.python.platform import tf_logging as logging
 from tensorflow.python.util import nest
+from tensorflow.python.util.tf_export import keras_export
 
 try:
   from scipy import sparse as scipy_sparse  # pylint: disable=g-import-not-at-top
@@ -271,15 +272,8 @@ class TensorLikeDataAdapter(DataAdapter):
 
     inputs = pack_x_y_sample_weight(x, y, sample_weights)
 
-    num_samples = set(int(i.shape[0]) for i in nest.flatten(inputs))
-    if len(num_samples) > 1:
-      msg = "Data cardinality is ambiguous:\n"
-      for label, data in zip(["x", "y", "sample_weight"], inputs):
-        msg += "  {} sizes: {}\n".format(
-            label, ", ".join(str(i.shape[0]) for i in nest.flatten(data)))
-      msg += "Please provide data which shares the same first dimension."
-      raise ValueError(msg)
-    num_samples = num_samples.pop()
+    num_samples = set(int(i.shape[0]) for i in nest.flatten(inputs)).pop()
+    _check_data_cardinality(inputs)
 
     # If batch_size is not passed but steps is, calculate from the input data.
     # Default to 32 for backwards compat.
@@ -785,6 +779,8 @@ class GeneratorDataAdapter(DataAdapter):
     peek, x = self._peek_and_restore(x)
     assert_not_namedtuple(peek)
 
+    self._first_batch_size = int(nest.flatten(peek)[0].shape[0])
+
     def _get_dynamic_shape(t):
       shape = t.shape
       # Unknown number of dimensions, `as_list` cannot be called.
@@ -1003,7 +999,7 @@ def _process_tensorlike(inputs):
       dtype = None
       if issubclass(x.dtype.type, np.floating):
         dtype = backend.floatx()
-      return ops.convert_to_tensor(x, dtype=dtype)
+      return ops.convert_to_tensor_v2_with_dispatch(x, dtype=dtype)
     elif scipy_sparse and scipy_sparse.issparse(x):
       return _scipy_sparse_to_sparse_tensor(x)
     return x

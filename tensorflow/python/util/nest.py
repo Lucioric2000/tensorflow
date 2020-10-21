@@ -215,7 +215,15 @@ def _yield_sorted_items(iterable):
   Yields:
     The iterable's (key, value) pairs, in order of sorted keys.
   """
-  if isinstance(iterable, _collections_abc.Mapping):
+  # Ordered to check common structure types (list, tuple, dict) first.
+  if isinstance(iterable, list):
+    for item in enumerate(iterable):
+      yield item
+  # namedtuples handled separately to avoid expensive namedtuple check.
+  elif type(iterable) == tuple:  # pylint: disable=unidiomatic-typecheck
+    for item in enumerate(iterable):
+      yield item
+  elif isinstance(iterable, (dict, _collections_abc.Mapping)):
     # Iterate through dictionaries in a deterministic order by sorting the
     # keys. Notice this means that we ignore the original order of `OrderedDict`
     # instances. This is intentional, to avoid potential bugs caused by mixing
@@ -327,6 +335,9 @@ def flatten(structure, expand_composites=False):
   Raises:
     TypeError: The nest is or contains a dict with non-sortable keys.
   """
+  if structure is None:
+    return [None]
+  expand_composites = bool(expand_composites)
   return _pywrap_utils.Flatten(structure, expand_composites)
 
 
@@ -335,6 +346,8 @@ _same_namedtuples = _pywrap_utils.SameNamedtuples
 
 
 class _DotString(object):
+
+  __slots__ = []
 
   def __str__(self):
     return "."
@@ -382,6 +395,10 @@ def assert_same_structure(nest1, nest2, check_types=True,
     TypeError: If the two structures differ in the type of sequence in any of
       their substructures. Only possible if `check_types` is `True`.
   """
+  # Convert to bool explicitly as otherwise pybind will not be able# to handle
+  # type mismatch message correctly. See GitHub issue 42329 for details.
+  check_types = bool(check_types)
+  expand_composites = bool(expand_composites)
   try:
     _pywrap_utils.AssertSameStructure(nest1, nest2, check_types,
                                       expand_composites)
