@@ -18,6 +18,8 @@ limitations under the License.
 
 #include <string.h>
 
+#include <cmath>
+
 #include <algorithm>
 #include <cmath>
 #include <type_traits>

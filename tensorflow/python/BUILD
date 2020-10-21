@@ -2273,6 +2273,16 @@ tf_py_test(
 )
 
 tf_py_test(
+    name = "framework_constant_op_test",
+    size = "small",
+    srcs = ["framework/constant_op_test.py"],
+    additional_deps = [
+        ":constant_op",
+    ],
+    main = "framework/constant_op_test.py",
+)
+
+tf_py_test(
     name = "framework_registry_test",
     size = "small",
     srcs = ["framework/registry_test.py"],
@@ -4169,6 +4179,121 @@ py_library(
         ":util",
         "//tensorflow/python/eager:context",
         "@six_archive//:six",
+    ],
+)
+
+py_library(
+    name = "loss_scale",
+    srcs = ["training/experimental/loss_scale.py"],
+    srcs_version = "PY2AND3",
+    deps = [
+        "//tensorflow/python:framework",
+        "@absl_py//absl/testing:parameterized",
+    ],
+)
+
+py_library(
+    name = "loss_scale_optimizer",
+    srcs = ["training/experimental/loss_scale_optimizer.py"],
+    srcs_version = "PY2AND3",
+    deps = [
+        ":loss_scale",
+        "//tensorflow/python/distribute:distribute_lib",
+        "@absl_py//absl/testing:parameterized",
+    ],
+)
+
+py_test(
+    name = "loss_scale_optimizer_test",
+    size = "small",
+    srcs = ["training/experimental/loss_scale_optimizer_test.py"],
+    python_version = "PY2",
+    deps = [
+        ":loss_scale_optimizer",
+        "//tensorflow/python:client_testlib",
+        "//tensorflow/python/distribute:mirrored_strategy",
+        "//tensorflow/python/distribute:one_device_strategy",
+        "//tensorflow/python/keras/mixed_precision/experimental:test_util",
+        "@absl_py//absl/testing:parameterized",
+    ],
+)
+
+py_test(
+    name = "loss_scale_test",
+    size = "medium",
+    srcs = ["training/experimental/loss_scale_test.py"],
+    python_version = "PY2",
+    deps = [
+        ":loss_scale",
+        "//tensorflow/python:client_testlib",
+        "//tensorflow/python/distribute:mirrored_strategy",
+        "//tensorflow/python/distribute:one_device_strategy",
+        "@absl_py//absl/testing:parameterized",
+    ],
+)
+
+py_library(
+    name = "mixed_precision_global_state",
+    srcs = ["training/experimental/mixed_precision_global_state.py"],
+    srcs_version = "PY2AND3",
+)
+
+py_library(
+    name = "mixed_precision",
+    srcs = ["training/experimental/mixed_precision.py"],
+    srcs_version = "PY2AND3",
+    deps = [
+        ":config",
+        ":loss_scale",
+        ":loss_scale_optimizer",
+        ":mixed_precision_global_state",
+        "//tensorflow/python:util",
+    ],
+)
+
+cuda_py_test(
+    name = "mixed_precision_test",
+    size = "small",
+    srcs = ["training/experimental/mixed_precision_test.py"],
+    additional_deps = [
+        ":mixed_precision",
+        "@absl_py//absl/testing:parameterized",
+        "//tensorflow/python:client_testlib",
+    ],
+    tags = [
+        "no_rocm",
+    ],
+)
+
+py_library(
+    name = "loss_scaling_gradient_tape",
+    srcs = ["training/experimental/loss_scaling_gradient_tape.py"],
+    srcs_version = "PY2AND3",
+    deps = [
+        ":array_ops",
+        ":loss_scale",
+        ":unconnected_gradients",
+        ":util",
+        "//tensorflow/python/distribute:distribute_lib",
+        "//tensorflow/python/eager:backprop",
+    ],
+)
+
+cuda_py_test(
+    name = "loss_scaling_gradient_tape_test",
+    size = "medium",
+    srcs = ["training/experimental/loss_scaling_gradient_tape_test.py"],
+    additional_deps = [
+        ":client_testlib",
+        ":constant_op",
+        ":framework_test_combinations_lib",
+        ":loss_scale",
+        ":loss_scaling_gradient_tape",
+        "@absl_py//absl/testing:parameterized",
+        "//third_party/py/numpy",
+        "//tensorflow/python/compat:v2_compat",
+        "//tensorflow/python/distribute:mirrored_strategy",
+        "//tensorflow/python/eager:def_function",
     ],
 )
 

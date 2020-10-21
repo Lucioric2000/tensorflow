@@ -133,7 +133,52 @@ To learn more about `abiFilters`, see
 [`NdkOptions`](https://google.github.io/android-gradle-dsl/current/com.android.build.gradle.internal.dsl.NdkOptions.html)
 in the Android Gradle documentation.
 
-## Build Android app using C++
+### Build TensorFlow Lite locally
+
+In some cases, you might wish to use a local build of TensorFlow Lite. For
+example, you may be building a custom binary that includes
+[operations selected from TensorFlow](https://www.tensorflow.org/lite/guide/ops_select),
+or you may wish to make local changes to TensorFlow Lite.
+
+#### Install Bazel and Android Prerequisites
+
+Bazel is the primary build system for TensorFlow. To build with Bazel, it and
+the Android NDK and SDK must be installed on your system.
+
+1.  Install the latest version of Bazel as per the instructions
+    [on the Bazel website](https://bazel.build/versions/master/docs/install.html).
+2.  The Android NDK is required to build the native (C/C++) TensorFlow Lite
+    code. The current recommended version is 17c, which may be found
+    [here](https://developer.android.com/ndk/downloads/older_releases.html#ndk-17c-downloads).
+3.  The Android SDK and build tools may be obtained
+    [here](https://developer.android.com/tools/revisions/build-tools.html), or
+    alternatively as part of
+    [Android Studio](https://developer.android.com/studio/index.html). Build
+    tools API >= 23 is the recommended version for building TensorFlow Lite.
+
+#### Configure WORKSPACE and .bazelrc
+
+Run the `./configure` script in the root TensorFlow checkout directory, and
+answer "Yes" when the script asks to interactively configure the `./WORKSPACE`
+for Android builds. The script will attempt to configure settings using the
+following environment variables:
+
+*   `ANDROID_SDK_HOME`
+*   `ANDROID_SDK_API_LEVEL`
+*   `ANDROID_NDK_HOME`
+*   `ANDROID_NDK_API_LEVEL`
+
+If these variables aren't set, they must be provided interactively in the script
+prompt. Successful configuration should yield entries similar to the following
+in the `.tf_configure.bazelrc` file in the root folder:
+
+```shell
+build --action_env ANDROID_NDK_HOME="/usr/local/android/android-ndk-r17c"
+build --action_env ANDROID_NDK_API_LEVEL="21"
+build --action_env ANDROID_BUILD_TOOLS_VERSION="28.0.3"
+build --action_env ANDROID_SDK_API_LEVEL="23"
+build --action_env ANDROID_SDK_HOME="/usr/local/android/android-sdk-linux"
+```
 
 There are two ways to use TFLite through C++ if you build your app with the NDK:
 

@@ -1,5 +1,4 @@
-load("//tensorflow:tensorflow.bzl", "if_not_windows", "tf_cc_test")
-load("//tensorflow/core/platform:build_config_root.bzl", "if_static")
+load("//tensorflow:tensorflow.bzl", "if_not_windows", "tf_cc_test", "tf_cuda_library")
 
 package(
     default_visibility = ["//tensorflow:internal"],

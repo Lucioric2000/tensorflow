@@ -649,6 +649,7 @@ cc_library(
         "//tensorflow/lite:string",
         "@farmhash_archive//:farmhash",
     ],
+    alwayslink = 1,
 )
 
 cc_library(
@@ -772,6 +773,7 @@ cc_library(
         "//tensorflow/lite/c:common",
         "//tensorflow/lite/schema:schema_fbs",
     ],
+    alwayslink = 1,
 )
 
 # The builtin_ops target will resolve to optimized kernels when available. This

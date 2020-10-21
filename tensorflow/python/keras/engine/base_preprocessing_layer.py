@@ -33,19 +33,11 @@ from tensorflow.python.framework import sparse_tensor
 from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.engine import training_generator
 from tensorflow.python.keras.engine.base_layer import Layer
-from tensorflow.python.keras.utils import tf_utils
-from tensorflow.python.ops import sparse_ops
-from tensorflow.python.ops.ragged import ragged_tensor
+from tensorflow.python.ops import math_ops
 from tensorflow.python.util.tf_export import keras_export
 
 
-_kpl_gauge = monitoring.StringGauge(
-    '/tensorflow/api/keras/layers/preprocessing',
-    'keras preprocessing layers usage', 'TFVersion')
-
-
 @keras_export('keras.layers.experimental.preprocessing.PreprocessingLayer')
-@six.add_metaclass(abc.ABCMeta)
 class PreprocessingLayer(Layer):
   """Base class for PreprocessingLayers."""
   _must_restore_from_config = True

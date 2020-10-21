@@ -270,11 +270,43 @@ class ParallelMapDatasetOp::Dataset : public DatasetBase {
       while (num_calls_ > 0) {
         cond_var_->wait(l);
       }
-      if (num_calls_ != 0) {
-        return errors::FailedPrecondition(
-            "Unexpected outstanding calls encountered.");
+      if (cancelled_) {
+        return errors::Cancelled("Iterator was cancelled");
       }
-      TF_RETURN_IF_ERROR(SaveInput(ctx, writer, input_impl_));
+    }
+    RecordStop(ctx);
+    result->notification.WaitForNotification();
+    RecordStart(ctx);
+    return ProcessResult(ctx, result, out_tensors, end_of_sequence);
+  }
+
+ protected:
+  std::shared_ptr<model::Node> CreateNode(
+      IteratorContext* ctx, model::Node::Args args) const override {
+    return model::MakeAsyncKnownRatioNode(
+        std::move(args),
+        /*ratio=*/1,
+        {model::MakeParameter("parallelism", num_parallel_calls_, /*min=*/1,
+                              /*max=*/ctx->runner_threadpool_size())});
+  }
+
+  Status SaveInternal(IteratorStateWriter* writer) override {
+    mutex_lock l(*mu_);
+    // Wait for all in-flight calls to complete.
+    while (num_calls_ > 0) {
+      cond_var_->wait(l);
+    }
+    if (num_calls_ != 0) {
+      return errors::FailedPrecondition(
+          "Unexpected outstanding calls encountered.");
+    }
+    TF_RETURN_IF_ERROR(SaveInput(writer, input_impl_));
+    TF_RETURN_IF_ERROR(writer->WriteScalar(
+        full_name(strings::StrCat(kInvocationResults, kSizeSuffix)),
+        invocation_results_.size()));
+    for (size_t i = 0; i < invocation_results_.size(); i++) {
+      const auto& result = *(invocation_results_[i]);
+      TF_RETURN_IF_ERROR(WriteStatusLocked(writer, i, result.status));
       TF_RETURN_IF_ERROR(
           writer->WriteScalar(absl::StrCat(prefix(), "::", kInvocationResults),
                               kSize, invocation_results_.size()));
@@ -560,25 +592,22 @@ class ParallelMapDatasetOp::Dataset : public DatasetBase {
       return true;
     }
 
-    void StatsThread(const std::shared_ptr<IteratorContext>& ctx) {
-      for (int64 step = 0;; ++step) {
-        int num_calls;
-        int num_parallel_calls;
-        {
-          mutex_lock l(*mu_);
-          if (step != 0 && !cancelled_) {
-            cond_var_->wait_for(
-                l, std::chrono::milliseconds(kStatsReportingPeriodMillis));
-          }
-          if (cancelled_) {
-            return;
-          }
-          num_calls = num_calls_;
-          num_parallel_calls = num_parallel_calls_->value;
-        }
-        if (num_parallel_calls == 0) {
-          // Avoid division by zero.
-          num_parallel_calls = 1;
+  // Determines whether the caller needs to wait for a result. Upon returning
+  // false, `result` will point to the result.
+  bool ShouldWait(std::shared_ptr<InvocationResult>* result)
+      EXCLUSIVE_LOCKS_REQUIRED(*mu_) {
+    if (cancelled_) {
+      return false;
+    }
+    if (sloppy_) {
+      for (auto it = invocation_results_.begin();
+           it != invocation_results_.end(); ++it) {
+        if ((*it)->notification.HasBeenNotified() &&
+            (it == invocation_results_.begin() || !(*it)->end_of_input)) {
+          std::swap(*result, *it);
+          invocation_results_.erase(it);
+          cond_var_->notify_all();
+          return false;
         }
         ctx->stats_aggregator()->AddScalar(
             stats_utils::ThreadUtilizationScalarName(dataset()->node_name()),

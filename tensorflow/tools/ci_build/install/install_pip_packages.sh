@@ -78,8 +78,8 @@ else
   pip3 install --upgrade numpy==1.14.5
 fi
 
-pip2 install scipy==1.2.2
-pip3 install scipy==1.4.1
+pip2 install --no-use-pep517 scipy==1.2.2
+pip3 install --no-use-pep517 scipy==1.4.1
 
 pip2 install scikit-learn==0.18.1
 pip3 install scikit-learn==0.18.1
@@ -94,19 +94,9 @@ pip3 install psutil
 pip2 install py-cpuinfo
 pip3 install py-cpuinfo
 
-# pylint==1.6.4 requires python-astroid (>= 1.4.5) requires lazy-object-proxy
-# Latest version of lazy-object-proxy (1.4.2) fails to install from source
-# when using setuptools 39.1.0.
-# NOTE: Using the updated version of pylint for python3 as python2 is EOL,
-# thus using the updated version of lazy-object-proxy==1.4.3
-pip2 install lazy-object-proxy==1.4.1
-pip3 install lazy-object-proxy==1.4.3
-
-# pylint tests require the following version. pylint==1.6.4 hangs erratically,
-# thus using the updated version of 2.5.3 only for python3 as python2 is EOL
-# and this version is not available.
-pip2 install pylint==1.6.4
-pip3 install pylint==2.5.3
+# pylint tests require the following:
+pip2 install --no-use-pep517 pylint==1.6.4
+pip3 install --no-use-pep517 pylint==1.6.4
 
 # pycodestyle tests require the following:
 pip2 install pycodestyle

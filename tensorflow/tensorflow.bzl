@@ -58,7 +58,7 @@ load(
 # not contain rc or alpha, only numbers.
 # Also update tensorflow/core/public/version.h
 # and tensorflow/tools/pip_package/setup.py
-VERSION = "2.4.0"
+VERSION = "2.1.0"
 VERSION_MAJOR = VERSION.split(".")[0]
 
 # Sanitize a dependency so that it works correctly from code that includes
@@ -2612,20 +2612,22 @@ def _dict_to_kv(d):
 def tf_py_build_info_genrule(name, out):
     _local_genrule(
         name = name,
-        out = out,
-        exec_tool = "//tensorflow/tools/build_info:gen_build_info",
-        arguments =
-            "--raw_generate \"$@\" " +
-            " --key_value" +
-            " is_rocm_build=" + if_rocm("True", "False") +
-            " is_cuda_build=" + if_cuda("True", "False") +
-            if_windows(_dict_to_kv({
-                "msvcp_dll_names": "msvcp140.dll,msvcp140_1.dll",
-            }), "") + if_windows_cuda(_dict_to_kv({
-                "nvcuda_dll_name": "nvcuda.dll",
-                "cudart_dll_name": "cudart{cuda_version}.dll",
-                "cudnn_dll_name": "cudnn{cudnn_version}.dll",
-            }), ""),
+        outs = [out],
+        cmd =
+            "$(location //tensorflow/tools/build_info:gen_build_info) --raw_generate \"$@\" " +
+            " --is_config_cuda " + if_cuda("True", "False") +
+            " --is_config_rocm " + if_rocm("True", "False") +
+            " --key_value " +
+            if_cuda(" cuda_version_number=$${TF_CUDA_VERSION:-} cudnn_version_number=$${TF_CUDNN_VERSION:-} ", "") +
+            if_windows(" msvcp_dll_names=msvcp140.dll,msvcp140_1.dll ", "") +
+            if_windows_cuda(" ".join([
+                "nvcuda_dll_name=nvcuda.dll",
+                "cudart_dll_name=cudart64_$$(echo $${TF_CUDA_VERSION:-} | sed \"s/\\.//\").dll",
+                "cudnn_dll_name=cudnn64_$${TF_CUDNN_VERSION:-}.dll",
+            ]), ""),
+        local = 1,
+        tools = [clean_dep("//tensorflow/tools/build_info:gen_build_info")],
+        **kwargs
     )
 
 def cc_library_with_android_deps(
@@ -2717,7 +2719,6 @@ def pybind_extension(
         srcs = srcs + hdrs,
         data = data,
         copts = copts + [
-            "-fno-strict-aliasing",
             "-fexceptions",
         ] + select({
             clean_dep("//tensorflow:windows"): [],

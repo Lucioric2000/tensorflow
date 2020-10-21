@@ -275,12 +275,6 @@ class LambdaLayerTest(keras_parameterized.TestCase):
     expected_out = ragged_factory_ops.constant([[2.0], [3.0, 4.0]])
     self.assertAllClose(out, expected_out)
 
-  def test_lambda_deserialization_does_not_pollute_core(self):
-    layer = keras.layers.Lambda(lambda x: x + 1)
-    config = layer.get_config()
-    keras.layers.Lambda.from_config(config)
-    self.assertNotIn(self.__class__.__name__, dir(core))
-
 
 class TestStatefulLambda(keras_parameterized.TestCase):
 
@@ -324,7 +318,7 @@ class TestStatefulLambda(keras_parameterized.TestCase):
     (    )?  <tf.Variable \'.*shift_and_scale/shift:0\'.+
     (    )?The layer cannot safely ensure proper Variable reuse.+''')
 
-    with self.assertRaisesRegex(ValueError, expected_error):
+    with self.assertRaisesRegexp(ValueError, expected_error):
       layer = keras.layers.Lambda(lambda_fn, name='shift_and_scale')
       model = testing_utils.get_model_from_layers([layer], input_shape=(1,))
       model(array_ops.ones((4, 1)))
@@ -342,7 +336,7 @@ class TestStatefulLambda(keras_parameterized.TestCase):
     (    )?  <tf.Variable \'.*bias_dense/dense/kernel:0\'.+
     (    )?The layer cannot safely ensure proper Variable reuse.+''')
 
-    with self.assertRaisesRegex(ValueError, expected_error):
+    with self.assertRaisesRegexp(ValueError, expected_error):
       layer = keras.layers.Lambda(bad_lambda_fn, name='bias_dense')
       model = testing_utils.get_model_from_layers([layer], input_shape=(1,))
       model(array_ops.ones((4, 1)))
@@ -365,7 +359,7 @@ class TestStatefulLambda(keras_parameterized.TestCase):
       raise ValueError(msg)
     layer._warn = patched_warn
 
-    with self.assertRaisesRegex(ValueError, expected_warning):
+    with self.assertRaisesRegexp(ValueError, expected_warning):
       model = testing_utils.get_model_from_layers([layer], input_shape=(1,))
       model(array_ops.ones((4, 1)))
 

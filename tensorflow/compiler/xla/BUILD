@@ -1,4 +1,5 @@
 load("//tensorflow:tensorflow.bzl", "cc_header_only_library", "tf_cc_test")
+load("//tensorflow/compiler/xla:xla.bzl", "xla_proto_library")
 load(
     "//tensorflow/core/platform:build_config.bzl",
     "tf_proto_library_cc",

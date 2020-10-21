@@ -39,7 +39,7 @@ _VARIANCE_NAME = 'variance'
 
 # TODO(momernick): Find a good example of normalization?
 @keras_export('keras.layers.experimental.preprocessing.Normalization', v1=[])
-class Normalization(base_preprocessing_layer.CombinerPreprocessingLayer):
+class Normalization(CombinerPreprocessingLayer):
   """Feature-wise normalization of the data.
 
   This layer will coerce its inputs into a distribution centered around

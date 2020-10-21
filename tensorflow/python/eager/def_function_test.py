@@ -127,7 +127,6 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
 
     self.assertAllEqual(fn(constant_op.constant(1.0)), 2.0)
 
-  @test_util.disable_tfrt('Variable argument is not supported')
   def testFunctionMultipleVariableInitializer(self):
 
     state = []
@@ -141,7 +140,6 @@ class DefFunctionTest(test.TestCase, parameterized.TestCase):
 
     self.assertAllEqual(fn(constant_op.constant(1.0)), [2.0, 5.0])
 
-  @test_util.disable_tfrt('Variable argument is not supported')
   def testFunctionInitializationFunction(self):
 
     state = []

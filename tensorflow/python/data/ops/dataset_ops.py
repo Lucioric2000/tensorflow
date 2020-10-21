@@ -1528,16 +1528,6 @@ class DatasetV2(collections_abc.Iterable, tracking_base.Trackable,
     >>> list(dataset.as_numpy_iterator())
     [(array([[ 1,  2,  3, -1], [ 4,  5, -1, -1]], dtype=int32),
       array([[ 10, 100], [ 11,  12]], dtype=int32))]
-    >>> # Pad with a single value and multiple components.
-    >>> E = tf.data.Dataset.zip((A, A)).padded_batch(2, padding_values=-1)
-    >>> for element in E.as_numpy_iterator():
-    ...   print(element)
-    (array([[ 1, -1],
-           [ 2,  2]], dtype=int32), array([[ 1, -1],
-           [ 2,  2]], dtype=int32))
-    (array([[ 3,  3,  3, -1],
-           [ 4,  4,  4,  4]], dtype=int32), array([[ 3,  3,  3, -1],
-           [ 4,  4,  4,  4]], dtype=int32))
 
     See also `tf.data.experimental.dense_to_sparse_batch`, which combines
     elements that may have different shapes into a `tf.sparse.SparseTensor`.

@@ -520,15 +520,7 @@ Status DatasetBaseIterator::GetNext(IteratorContext* ctx,
   profiler::TraceMe activity([&] { return BuildTraceMeName(); },
                              profiler::TraceMeLevel::kInfo);
   DVLOG(3) << prefix() << " GetNext enter";
-  auto model = ctx->model();
-  if (model && model->collect_resource_usage() && node_) {
-    int64 now_nanos = EnvTime::NowNanos();
-    auto output = node_->output();
-    if (output) {
-      output->record_stop(now_nanos);
-    }
-    node_->record_start(now_nanos);
-  }
+  RecordStart(ctx, /*stop_output=*/true);
   Status s = GetNextInternal(ctx, out_tensors, end_of_sequence);
   if (TF_PREDICT_TRUE(s.ok() && !*end_of_sequence)) {
     DCHECK_EQ(out_tensors->size(), dataset()->output_dtypes().size());

@@ -55,7 +55,6 @@ from tensorflow.python.ops import nn
 from tensorflow.python.ops import variable_scope
 from tensorflow.python.platform import tf_logging
 from tensorflow.python.training.tracking import base as trackable
-from tensorflow.python.util import dispatch
 from tensorflow.python.util import nest
 from tensorflow.python.util import tf_decorator
 from tensorflow.python.util.tf_export import get_canonical_name_for_symbol
@@ -747,15 +746,15 @@ class Lambda(Layer):
   The `Lambda` layer exists so that arbitrary TensorFlow functions
   can be used when constructing `Sequential` and Functional API
   models. `Lambda` layers are best suited for simple operations or
-  quick experimentation. For more advanced use cases, follow
+  quick experimentation. For more advanced usecases, follow 
   [this guide](https://www.tensorflow.org/guide/keras/custom_layers_and_models)
-  for subclassing `tf.keras.layers.Layer`.
-
-  The main reason to subclass `tf.keras.layers.Layer` instead of using a
-  `Lambda` layer is saving and inspecting a Model. `Lambda` layers
-  are saved by serializing the Python bytecode, whereas subclassed
-  Layers can be saved via overriding their `get_config` method. Overriding
-  `get_config` improves the portability of Models. Models that rely on
+  for subclassing `tf.keras.layers.Layer`. 
+  
+  The main reason to subclass `tf.keras.layers.Layer` instead of using a 
+  `Lambda` layer is saving and inspecting a Model. `Lambda` layers 
+  are saved by serializing the Python bytecode, whereas subclassed 
+  Layers can be saved via overriding their `get_config` method. Overriding 
+  `get_config` improves the portability of Models. Models that rely on 
   subclassed Layers are also often easier to visualize and reason about.
 
   Examples:
@@ -911,12 +910,11 @@ class Lambda(Layer):
       # checking only to immediately discard it.
       return
 
-    tracked_weights = set(v.ref() for v in self.weights)
-    untracked_new_vars = [
-        v for v in created_variables if v.ref() not in tracked_weights
-    ]
+    tracked_weights = set(v.experimental_ref() for v in self.weights)
+    untracked_new_vars = [v for v in created_variables
+                          if v.experimental_ref() not in tracked_weights]
     if untracked_new_vars:
-      variable_str = '\n'.join('  {}'.format(i) for i in untracked_new_vars)
+      variable_str = '\n'.join(['  {}'.format(i) for i in untracked_new_vars])
       error_str = textwrap.dedent(
           '''
           The following Variables were created within a Lambda layer ({name})
@@ -930,11 +928,10 @@ class Lambda(Layer):
       ).format(name=self.name, variable_str=variable_str)
       raise ValueError(error_str)
 
-    untracked_used_vars = [
-        v for v in accessed_variables if v.ref() not in tracked_weights
-    ]
+    untracked_used_vars = [v for v in accessed_variables
+                           if v.experimental_ref() not in tracked_weights]
     if untracked_used_vars and not self._already_warned:
-      variable_str = '\n'.join('  {}'.format(i) for i in untracked_used_vars)
+      variable_str = '\n'.join(['  {}'.format(i) for i in untracked_used_vars])
       self._warn(textwrap.dedent(
           '''
           The following Variables were used a Lambda layer's call ({name}), but

@@ -49,7 +49,7 @@ from setuptools.dist import Distribution
 # result for pip.
 # Also update tensorflow/tensorflow.bzl and
 # tensorflow/core/public/version.h
-_VERSION = '2.4.0'
+_VERSION = '2.1.0'
 
 REQUIRED_PACKAGES = [
     'absl-py >= 0.7.0',
@@ -63,14 +63,18 @@ REQUIRED_PACKAGES = [
     # https://github.com/numpy/numpy/pull/15355
     'numpy >= 1.16.0, < 1.19.0',
     'opt_einsum >= 2.3.2',
-    'protobuf >= 3.9.2',
-    'tensorboard >= 2.3.0, < 3',
-    'tensorflow_estimator >= 2.3.0, < 2.4.0',
+    'protobuf >= 3.8.0',
+    'tensorboard >= 2.1.0, < 2.2.0',
+    'tensorflow_estimator >= 2.1.0rc0, < 2.2.0',
     'termcolor >= 1.1.0',
     'typing_extensions >= 3.7.4.2',
     'wrapt >= 1.11.1',
     'wheel >= 0.26',
     'six >= 1.12.0',
+    # scipy < 1.4.1 causes segfaults due to pybind11
+    # Latest scipy pip for py2 is scipy==1.2.2
+    'scipy == 1.4.1;python_version>="3"',
+    'scipy == 1.2.2;python_version<"3"',
 ]
 
 if sys.byteorder == 'little':

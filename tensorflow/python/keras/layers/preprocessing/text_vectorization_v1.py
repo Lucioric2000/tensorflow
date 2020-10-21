@@ -23,10 +23,11 @@ from tensorflow.python.keras.engine import base_preprocessing_layer_v1
 from tensorflow.python.keras.layers.preprocessing import category_encoding_v1
 from tensorflow.python.keras.layers.preprocessing import string_lookup_v1
 from tensorflow.python.keras.layers.preprocessing import text_vectorization
+from tensorflow.python.ops.ragged import ragged_tensor_value
 from tensorflow.python.util.tf_export import keras_export
 
 
-@keras_export(v1=["keras.layers.experimental.preprocessing.TextVectorization"])
+@keras_export(v1=['keras.layers.experimental.preprocessing.TextVectorization'])
 class TextVectorization(text_vectorization.TextVectorization,
                         base_preprocessing_layer_v1.CombinerPreprocessingLayer):
   """Text vectorization layer.
