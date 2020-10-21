@@ -23,9 +23,7 @@ limitations under the License.
 #include "tensorflow/core/framework/types.h"
 #include "tensorflow/core/lib/core/errors.h"
 #include "tensorflow/core/lib/strings/str_util.h"
-#include "tensorflow/core/platform/errors.h"
 #include "tensorflow/core/platform/macros.h"
-#include "tensorflow/core/platform/tstring.h"
 #include "tensorflow/core/platform/types.h"
 #include "tensorflow/python/lib/core/ndarray_tensor.h"
 #include "tensorflow/python/lib/core/ndarray_tensor_bridge.h"
@@ -540,11 +538,6 @@ struct ConverterTraits<Eigen::half> {
     return tensorflow::unwrap(ctx)->CreateHalfScalar(value);
   }
 
-  static AbstractTensorInterface* CreateTensor(
-      TFE_Context* ctx, absl::Span<const int64> dim_sizes) {
-    return tensorflow::unwrap(ctx)->CreateTensor(DT_HALF, dim_sizes);
-  }
-
   static const char* ConvertScalar(PyObject* v, Eigen::half* out) {
     return ConvertOneFloat<Eigen::half>(v, out);
   }
@@ -788,7 +781,8 @@ TFE_TensorHandle* PySeqToTFE_TensorHandle(TFE_Context* ctx, PyObject* obj,
       break;
 
     case DT_HALF:
-      status = NumpyHalfConverter::Convert(ctx, obj, &state, &handle, &error);
+      if (NumpyHalfConverter::Convert(obj, shape, ret) == nullptr)
+        return Status::OK();
       break;
 
     case DT_INT64:

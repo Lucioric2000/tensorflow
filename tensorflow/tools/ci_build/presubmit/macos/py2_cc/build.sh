@@ -62,7 +62,9 @@ function run_build () {
 }
 
 source tensorflow/tools/ci_build/release/common.sh
-install_bazelisk
+update_bazel_macos
+which bazel
+set_bazel_outdir
 
 setup_pip
 run_build

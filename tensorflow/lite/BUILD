@@ -270,33 +270,7 @@ cc_library(
     name = "framework",
     srcs = [
     ],
-    hdrs = FRAMEWORK_LIB_HDRS,
-    copts = tflite_copts() + TFLITE_DEFAULT_COPTS,
-    defines = if_tflite_experimental_runtime(
-        if_eager = ["TFLITE_EXPERIMENTAL_RUNTIME_EAGER"],
-        if_non_eager = ["TFLITE_EXPERIMENTAL_RUNTIME_NON_EAGER"],
-        if_none = [],
-    ),
-    deps = [
-        ":framework_lib",
-        ":allocation",
-        ":arena_planner",
-        ":external_cpu_backend_context",
-        ":graph_info",
-        ":memory_planner",
-        ":minimal_logging",
-        ":simple_memory_arena",
-        ":string",
-        ":type_to_tflitetype",
-        ":util",
-        ":version",
-        "//tensorflow/lite/c:common",
-        "//tensorflow/lite/core/api",
-        "//tensorflow/lite/delegates/nnapi:nnapi_delegate",
-        "//tensorflow/lite/experimental/resource",
-        "//tensorflow/lite/nnapi:nnapi_implementation",
-        "//tensorflow/lite/schema:schema_fbs",
-    ] + tflite_experimental_runtime_linkopts(),
+    alwayslink = 1,
 )
 
 cc_library(

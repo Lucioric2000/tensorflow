@@ -399,6 +399,31 @@ ParallelInterleaveDatasetParams LongCycleDeterministicParams() {
       /*node_name=*/kNodeName);
 }
 
+ParallelInterleaveDatasetParams LongCycleDeteriministicParams() {
+  auto tensor_slice_dataset_params = TensorSliceDatasetParams(
+      /*components=*/{CreateTensor<tstring>(
+          TensorShape{3, 3, 1}, {"a", "b", "c", "d", "e", "f", "g", "h", "i"})},
+      /*node_name=*/"tensor_slice");
+  return ParallelInterleaveDatasetParams(
+      tensor_slice_dataset_params,
+      /*other_arguments=*/{},
+      /*cycle_length=*/11,
+      /*block_length=*/1,
+      /*num_parallel_calls=*/2,
+      /*func=*/
+      MakeTensorSliceDatasetFunc(
+          DataTypeVector({DT_STRING}),
+          std::vector<PartialTensorShape>({PartialTensorShape({1})})),
+      /*func_lib=*/{test::function::MakeTensorSliceDataset()},
+      /*type_arguments=*/{},
+      /*output_dtypes=*/{DT_STRING},
+      /*output_shapes=*/{PartialTensorShape({1})},
+      /*sloppy=*/false,
+      /*node_name=*/kNodeName);
+}
+
+// test case 11: cycle_length = 0, block_length = 1, num_parallel_calls = 2,
+// sloppy = true
 ParallelInterleaveDatasetParams
 ParallelInterleaveDatasetParamsWithInvalidCycleLength() {
   auto tensor_slice_dataset_params = TensorSliceDatasetParams(
@@ -593,7 +618,7 @@ GetNextTestCases() {
                {{"a"}, {"b"}, {"c"}, {"d"}, {"e"}, {"f"}, {"g"}, {"h"}, {"i"}}),
            /*compare_order=*/false},
           {/*dataset_params=*/
-           LongCycleDeterministicParams(),
+           LongCycleDeteriministicParams(),
            /*expected_outputs=*/
            CreateTensors<tstring>(
                TensorShape{1},

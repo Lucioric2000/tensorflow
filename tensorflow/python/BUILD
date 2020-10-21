@@ -2077,6 +2077,16 @@ tf_py_test(
 )
 
 tf_py_test(
+    name = "framework_constant_op_test",
+    size = "small",
+    srcs = ["framework/constant_op_test.py"],
+    additional_deps = [
+        ":constant_op",
+    ],
+    main = "framework/constant_op_test.py",
+)
+
+tf_py_test(
     name = "framework_registry_test",
     size = "small",
     srcs = ["framework/registry_test.py"],
@@ -3993,18 +4003,17 @@ cuda_py_test(
     name = "loss_scaling_gradient_tape_test",
     size = "medium",
     srcs = ["training/experimental/loss_scaling_gradient_tape_test.py"],
-    shard_count = 2,
-    deps = [
+    additional_deps = [
         ":client_testlib",
         ":constant_op",
         ":framework_test_combinations_lib",
         ":loss_scale",
         ":loss_scaling_gradient_tape",
+        "@absl_py//absl/testing:parameterized",
+        "//third_party/py/numpy",
         "//tensorflow/python/compat:v2_compat",
         "//tensorflow/python/distribute:mirrored_strategy",
         "//tensorflow/python/eager:def_function",
-        "//third_party/py/numpy",
-        "@absl_py//absl/testing:parameterized",
     ],
 )
 

@@ -69,29 +69,27 @@ def maybe_init_scope():
       yield
 
 
-def validate_run_function(fn):
-  """Validate the function passed into strategy.run."""
+def validate_experimental_run_function(fn):
+  """Validate the function passed into strategy.experimental_run_v2."""
 
   # We allow three types of functions/objects passed into TPUStrategy
-  # run in eager mode:
+  # experimental_run_v2 in eager mode:
   #   1. a user annotated tf.function
   #   2. a ConcreteFunction, this is mostly what you get from loading a saved
   #      model.
   #   3. a callable object and the `__call__` method itself is a tf.function.
   #
   # Otherwise we return an error, because we don't support eagerly running
-  # run in TPUStrategy.
+  # experimental_run_v2 in TPUStrategy.
 
-  if context.executing_eagerly() \
-      and not isinstance(fn, def_function.Function) \
-      and not isinstance(fn, function.ConcreteFunction) \
-      and not (callable(fn) and isinstance(fn.__call__, def_function.Function)):
+  if context.executing_eagerly() and not isinstance(
+      fn, def_function.Function) and not isinstance(
+          fn, function.ConcreteFunction) and not (callable(fn) and isinstance(
+              fn.__call__, def_function.Function)):
     raise NotImplementedError(
-        "TPUStrategy.run(fn, ...) does not support pure eager "
-        "execution. please make sure the function passed into "
-        "`strategy.run` is a `tf.function` or "
-        "`strategy.run` is called inside a `tf.function` if "
-        "eager behavior is enabled.")
+        "TPUStrategy.experimental_run_v2(fn, ...) does not support eager "
+        "execution. Either convert `fn` into a tf.function or consider "
+        "calling strategy.experimental_run_v2 inside a tf.function.")
 
 
 @tf_export("distribute.experimental.TPUStrategy", v1=[])
@@ -123,6 +121,28 @@ class TPUStrategy(distribute_lib.Strategy):
                tpu_cluster_resolver=None,
                device_assignment=None):
     """Synchronous training in TPU donuts or Pods.
+    
+    To construct a TPUStrategy object, you need to run the
+    initialization code as below:
+    
+    ```python
+    resolver = tf.distribute.cluster_resolver.TPUClusterResolver(tpu=FLAGS.tpu)
+    tf.config.experimental_connect_to_cluster(resolver)
+    tf.tpu.experimental.initialize_tpu_system(resolver)
+    strategy = tf.distribute.experimental.TPUStrategy(resolver)
+    ```
+    
+    While using distribution strategies, the variables created within strategy's
+    scope will be replicated across all the replicas and can be kept in sync
+    using all-reduce algorithms.
+    
+    To run TF2 programs on TPUs, you can either use `.compile` and
+    `.fit` APIs in `tf.keras` with TPUStrategy, or write your own customized
+    training loop by calling `strategy.experimental_run_v2` directly. Note that
+    TPUStrategy doesn't support pure eager execution, so please make sure the
+    function passed into `strategy.experimental_run_v2` is a `tf.function` or
+    `strategy.experimental_run_v2` us called inside a `tf.function` if running
+    in eager mode.
 
     Args:
       tpu_cluster_resolver: A tf.distribute.cluster_resolver.TPUClusterResolver,
@@ -144,7 +164,7 @@ class TPUStrategy(distribute_lib.Strategy):
   # This implementation runs a single step. It does not use infeed or outfeed.
   def run(self, fn, args=(), kwargs=None, options=None):
     """See base class."""
-    validate_run_function(fn)
+    validate_experimental_run_function(fn)
 
     # Note: the target function is converted to graph even when in Eager mode,
     # so autograph is on by default here.
@@ -191,62 +211,12 @@ class TPUStrategyV1(distribute_lib.StrategyV1):
   # TODO(cjfj): Modify `_call_for_each_replica` in `TPUExtended` such that this
   # can use the default implementation.
   # This implementation runs a single step. It does not use infeed or outfeed.
-  def run(self, fn, args=(), kwargs=None, options=None):
-    """Run `fn` on each replica, with the given arguments.
+  def experimental_run_v2(self, fn, args=(), kwargs=None):
+    validate_experimental_run_function(fn)
 
-    Executes ops specified by `fn` on each replica. If `args` or `kwargs` have
-    "per-replica" values, such as those produced by a "distributed `Dataset`",
-    when `fn` is executed on a particular replica, it will be executed with the
-    component of those "per-replica" values that correspond to that replica.
-
-    `fn` may call `tf.distribute.get_replica_context()` to access members such
-    as `all_reduce`.
-
-    All arguments in `args` or `kwargs` should either be nest of tensors or
-    per-replica objects containing tensors or composite tensors.
-
-    Users can pass strategy specific options to `options` argument. An example
-    to enable bucketizing dynamic shapes in `TPUStrategy.run`
-    is:
-
-    >>> resolver = tf.distribute.cluster_resolver.TPUClusterResolver(tpu='')
-    >>> tf.config.experimental_connect_to_cluster(resolver)
-    >>> tf.tpu.experimental.initialize_tpu_system(resolver)
-    >>> strategy = tf.distribute.experimental.TPUStrategy(resolver)
-
-    >>> options = tf.distribute.RunOptions(
-    ...     experimental_bucketizing_dynamic_shape=True)
-
-    >>> dataset = tf.data.Dataset.range(
-    ...    strategy.num_replicas_in_sync, output_type=dtypes.float32).batch(
-    ...        strategy.num_replicas_in_sync, drop_remainder=True)
-    >>> input_iterator = iter(strategy.experimental_distribute_dataset(dataset))
-
-    >>> @tf.function()
-    ... def step_fn(inputs):
-    ...  output = tf.reduce_sum(inputs)
-    ...  return output
-
-    >>> strategy.run(step_fn, args=(next(input_iterator),), options=options)
-
-    Args:
-      fn: The function to run. The output must be a `tf.nest` of `Tensor`s.
-      args: (Optional) Positional arguments to `fn`.
-      kwargs: (Optional) Keyword arguments to `fn`.
-      options: (Optional) An instance of `tf.distribute.RunOptions` specifying
-        the options to run `fn`.
-
-    Returns:
-      Merged return value of `fn` across replicas. The structure of the return
-      value is the same as the return value from `fn`. Each element in the
-      structure can either be "per-replica" `Tensor` objects or `Tensor`s
-      (for example, if running on a single replica).
-    """
-    validate_run_function(fn)
-
-    fn = autograph.tf_convert(fn, autograph_ctx.control_status_ctx())
-    options = options or distribute_lib.RunOptions()
-    return self.extended.tpu_run(fn, args, kwargs, options)
+    """See base class."""
+    fn = autograph.tf_convert(fn, ag_ctx.control_status_ctx())
+    return self.extended.tpu_run(fn, args, kwargs)
 
 
 # TODO(josh11b): Switch to V2 when we no longer need to support tf.compat.v1.

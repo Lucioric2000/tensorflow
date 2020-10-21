@@ -331,31 +331,6 @@ class ShuffleTest(test_base.DatasetTestBase, parameterized.TestCase):
     with self.assertRaises(errors.OutOfRangeError):
       self.evaluate(get_next())
 
-  # We skip v2 eager since the v2 eager shuffle dataset is not serializable due
-  # to its use of an external seed generator resource.
-  @combinations.generate(
-      combinations.times(
-          test_base.graph_only_combinations() +
-          combinations.combine(mode=["eager"]),
-          combinations.combine(reshuffle=[True, False])))
-  def testRerandomizeOnReplicate(self, reshuffle):
-    if tf2.enabled() and not compat.forward_compatible(2020, 5, 22):
-      self.skipTest("Functionality currently not supported.")
-
-    random_seed.set_random_seed(None)
-    # When no seeds are fixed, each instantiation of the shuffle dataset should
-    # produce elements in a different order.
-    num_elements = 100
-    dataset = dataset_ops.Dataset.range(num_elements)
-    dataset = dataset.shuffle(num_elements, reshuffle_each_iteration=reshuffle)
-
-    shuffle_1 = self.getDatasetOutput(dataset)
-    dataset = self.graphRoundTrip(dataset, allow_stateful=True)
-    shuffle_2 = self.getDatasetOutput(dataset)
-
-    self.assertCountEqual(shuffle_1, shuffle_2)
-    self.assertNotEqual(shuffle_1, shuffle_2)
-
 
 if __name__ == "__main__":
   test.main()

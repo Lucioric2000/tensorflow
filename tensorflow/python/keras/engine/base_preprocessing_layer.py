@@ -31,9 +31,7 @@ from tensorflow.python.framework import sparse_tensor
 from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.engine import training_generator
 from tensorflow.python.keras.engine.base_layer import Layer
-from tensorflow.python.keras.utils import tf_utils
-from tensorflow.python.ops import sparse_ops
-from tensorflow.python.ops.ragged import ragged_tensor
+from tensorflow.python.ops import math_ops
 from tensorflow.python.util.tf_export import keras_export
 
 

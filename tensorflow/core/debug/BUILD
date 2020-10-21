@@ -16,7 +16,6 @@ load("//tensorflow:tensorflow.bzl", "tf_grpc_cc_dependency")
 load(
     "//tensorflow:tensorflow.bzl",
     "check_deps",
-    "if_windows",
     "tf_cc_binary",
     "tf_cc_test",
     "tf_copts",

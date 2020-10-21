@@ -78,8 +78,8 @@ else
   pip3 install --upgrade numpy==1.14.5
 fi
 
-pip2 install scipy==1.2.2
-pip3 install scipy==1.4.1
+pip2 install --no-use-pep517 scipy==1.2.2
+pip3 install --no-use-pep517 scipy==1.4.1
 
 pip2 install scikit-learn==0.18.1
 pip3 install scikit-learn==0.18.1
@@ -101,8 +101,8 @@ pip2 install lazy-object-proxy==1.4.1
 pip3 install lazy-object-proxy==1.4.1
 
 # pylint tests require the following:
-pip2 install pylint==1.6.4
-pip3 install pylint==1.6.4
+pip2 install --no-use-pep517 pylint==1.6.4
+pip3 install --no-use-pep517 pylint==1.6.4
 
 # pycodestyle tests require the following:
 pip2 install pycodestyle

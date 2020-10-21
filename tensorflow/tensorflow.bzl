@@ -58,7 +58,7 @@ load(
 # not contain rc or alpha, only numbers.
 # Also update tensorflow/core/public/version.h
 # and tensorflow/tools/pip_package/setup.py
-VERSION = "2.2.0"
+VERSION = "2.1.0"
 VERSION_MAJOR = VERSION.split(".")[0]
 
 # Sanitize a dependency so that it works correctly from code that includes
@@ -2603,7 +2603,7 @@ def tf_py_build_info_genrule(name, out):
             " --is_config_cuda " + if_cuda("True", "False") +
             " --is_config_rocm " + if_rocm("True", "False") +
             " --key_value " +
-            if_cuda(" cuda_version_number=${TF_CUDA_VERSION:-} cudnn_version_number=${TF_CUDNN_VERSION:-} ", "") +
+            if_cuda(" cuda_version_number=$${TF_CUDA_VERSION:-} cudnn_version_number=$${TF_CUDNN_VERSION:-} ", "") +
             if_windows(" msvcp_dll_names=msvcp140.dll,msvcp140_1.dll ", "") +
             if_windows_cuda(" ".join([
                 "nvcuda_dll_name=nvcuda.dll",
@@ -2701,7 +2701,6 @@ def pybind_extension(
         srcs = srcs + hdrs,
         data = data,
         copts = copts + [
-            "-fno-strict-aliasing",
             "-fexceptions",
         ] + select({
             clean_dep("//tensorflow:windows"): [],

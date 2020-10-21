@@ -866,11 +866,15 @@ class DatasetBaseIterator : public IteratorBase {
     const string prefix;
   };
 
-  explicit DatasetBaseIterator(const BaseParams& params);
+  explicit DatasetBaseIterator(const BaseParams& params) : params_(params) {
+    params_.dataset->Ref();
+    VLOG(2) << prefix() << " constructor";
+  }
 
-  ~DatasetBaseIterator() override;
-
-  virtual const DatasetBase* dataset() const { return params_.dataset; }
+  ~DatasetBaseIterator() override {
+    VLOG(2) << prefix() << " destructor";
+    params_.dataset->Unref();
+  }
 
   const DataTypeVector& output_dtypes() const override {
     return params_.dataset->output_dtypes();

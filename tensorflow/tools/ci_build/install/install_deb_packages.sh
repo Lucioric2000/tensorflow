@@ -65,7 +65,9 @@ apt-get install -y --no-install-recommends \
     vim \
     wget \
     zip \
-    zlib1g-dev
+    zlib1g-dev \
+    libblas-dev liblapack-dev gfortran \
+    libhdf5-dev libhdf5-serial-dev
 
 # populate the database
 updatedb

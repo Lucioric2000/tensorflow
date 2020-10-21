@@ -494,9 +494,9 @@ class Context(object):
         # configured and thus clear the job, replica & task.
         if spec.job == "localhost":
           spec = spec.replace(job=None, replica=None, task=None)
-        logical_devices.append(
+        self._logical_devices.append(
             LogicalDevice(name=spec.to_string(), device_type=spec.device_type))
-        dev_type = pywrap_tfe.TF_DeviceListType(device_list, i)
+        dev_type = pywrap_tensorflow.TF_DeviceListType(device_list, i)
         if dev_type == "GPU":
           self._num_gpus += 1
 

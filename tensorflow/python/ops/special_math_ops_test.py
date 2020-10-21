@@ -654,7 +654,7 @@ class EinsumTest(test.TestCase):
       # with the same input args (as input_1 and input_2 above), and if
       # those tests run before this test, then the call_count for the method
       # mock_contract_path will not increment.
-      if not six.PY2:
+      if six.PY3:
         special_math_ops._get_opt_einsum_contract_path.cache_clear()
 
       self.assertEqual(mock_contract_path.call_count, 0)

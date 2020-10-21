@@ -374,6 +374,23 @@ def _enclosing_xla_context():
   return None
 
 
+def _enclosing_xla_context():
+  """Returns the XLAControlFlowContext, which exists inside a tpu.rewrite()."""
+  graph = ops.get_default_graph()
+  while graph is not None:
+    # pylint: disable=protected-access
+    context_ = graph._get_control_flow_context()
+    # pylint: enable=protected-access
+    while context_ is not None:
+      if isinstance(context_, control_flow_ops.XLAControlFlowContext):
+        return context_
+      context_ = context_.outer_context
+    # This may be a FuncGraph due to defuns or v2 control flow. We need to
+    # find the original graph with the XLAControlFlowContext.
+    graph = getattr(graph, "outer_graph", None)
+  return None
+
+
 class _EagerDefinedFunctionDeleter(object):
   """Unregister function from eager context."""
 
@@ -3726,8 +3743,7 @@ def class_method_to_instance_method(original_function, instance):
       name=original_function._name,
       autograph=original_function._autograph,
       input_signature=original_function.input_signature,
-      experimental_relax_shapes=original_function._experimental_relax_shapes,
-      experimental_compile=original_function._experimental_compile)
+      experimental_relax_shapes=original_function._experimental_relax_shapes)
   # pylint: enable=protected-access
 
   # And we wrap the function with tf_decorator so inspection works correctly

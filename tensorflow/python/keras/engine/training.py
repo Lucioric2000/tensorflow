@@ -860,7 +860,7 @@ class Model(base_layer.Layer, version_utils.ModelVersionSelector):
             of either `(inputs, targets)` or
             `(inputs, targets, sample_weights)`.
           - A generator or `keras.utils.Sequence` returning `(inputs, targets)`
-            or `(inputs, targets, sample_weights)`.
+            or `(inputs, targets, sample weights)`.
           A more detailed description of unpacking behavior for iterator types
           (Dataset, generator, Sequence) is given below.
         y: Target data. Like the input data `x`,
@@ -991,6 +991,30 @@ class Model(base_layer.Layer, version_utils.ModelVersionSelector):
             `False`. Note that because this implementation relies on
             multiprocessing, you should not pass non-picklable arguments to
             the generator as they can't be passed easily to children processes.
+
+    Unpacking behavior for iterator-like inputs:
+        A common pattern is to pass a tf.data.Dataset, generator, or
+      tf.keras.utils.Sequence to the `x` argument of fit, which will in fact
+      yield not only features (x) but optionally targets (y) and sample weights.
+      Keras requires that the output of such iterator-likes be unambiguous. The
+      iterator should return a tuple of length 1, 2, or 3, where the optional
+      second and third elements will be used for y and sample_weight
+      respectively. Any other type provided will be wrapped in a length one
+      tuple, effectively treating everything as 'x'. When yielding dicts, they
+      should still adhere to the top-level tuple structure.
+      e.g. `({"x0": x0, "x1": x1}, y)`. Keras will not attempt to separate
+      features, targets, and weights from the keys of a single dict.
+        A notable unsupported data type is the namedtuple. The reason is that
+      it behaves like both an ordered datatype (tuple) and a mapping
+      datatype (dict). So given a namedtuple of the form:
+          `namedtuple("example_tuple", ["y", "x"])`
+      it is ambiguous whether to reverse the order of the elements when
+      interpreting the value. Even worse is a tuple of the form:
+          `namedtuple("other_tuple", ["x", "y", "z"])`
+      where it is unclear if the tuple was intended to be unpacked into x, y,
+      and sample_weight or passed through as a single element to `x`. As a
+      result the data processing code will simply raise a ValueError if it
+      encounters a namedtuple. (Along with instructions to remedy the issue.)
 
     Unpacking behavior for iterator-like inputs:
         A common pattern is to pass a tf.data.Dataset, generator, or
@@ -1240,43 +1264,57 @@ class Model(base_layer.Layer, version_utils.ModelVersionSelector):
     Computation is done in batches (see the `batch_size` arg.)
 
     Arguments:
-        x: Input data. It could be: - A Numpy array (or array-like), or a list
-          of arrays (in case the model has multiple inputs). - A TensorFlow
-          tensor, or a list of tensors (in case the model has multiple inputs).
-          - A dict mapping input names to the corresponding array/tensors, if
-          the model has named inputs. - A `tf.data` dataset. - A generator or
-          `keras.utils.Sequence` instance. A more detailed description of
-          unpacking behavior for iterator types (Dataset, generator, Sequence)
-          is given in the `Unpacking behavior for iterator-like inputs` section
-          of `Model.fit`.
-        y: Target data. Like the input data `x`, it could be either Numpy
-          array(s) or TensorFlow tensor(s). It should be consistent with `x`
-          (you cannot have Numpy inputs and tensor targets, or inversely). If
-          `x` is a dataset, generator or `keras.utils.Sequence` instance, `y`
-          should not be specified (since targets will be obtained from the
-          iterator/dataset).
-        batch_size: Integer or `None`. Number of samples per batch of
-          computation. If unspecified, `batch_size` will default to 32. Do not
-          specify the `batch_size` if your data is in the form of a dataset,
-          generators, or `keras.utils.Sequence` instances (since they generate
-          batches).
-        verbose: 0 or 1. Verbosity mode. 0 = silent, 1 = progress bar.
-        sample_weight: Optional Numpy array of weights for the test samples,
-          used for weighting the loss function. You can either pass a flat (1D)
-          Numpy array with the same length as the input samples
-            (1:1 mapping between weights and samples), or in the case of
-              temporal data, you can pass a 2D array with shape `(samples,
-              sequence_length)`, to apply a different weight to every timestep
-              of every sample. This argument is not supported when `x` is a
-              dataset, instead pass sample weights as the third element of `x`.
-        steps: Integer or `None`. Total number of steps (batches of samples)
-          before declaring the evaluation round finished. Ignored with the
-          default value of `None`. If x is a `tf.data` dataset and `steps` is
-          None, 'evaluate' will run until the dataset is exhausted. This
-          argument is not supported with array inputs.
-        callbacks: List of `keras.callbacks.Callback` instances. List of
-          callbacks to apply during evaluation. See
-          [callbacks](/api_docs/python/tf/keras/callbacks).
+        x: Input data. It could be:
+          - A Numpy array (or array-like), or a list of arrays
+            (in case the model has multiple inputs).
+          - A TensorFlow tensor, or a list of tensors
+            (in case the model has multiple inputs).
+          - A dict mapping input names to the corresponding array/tensors,
+            if the model has named inputs.
+          - A `tf.data` dataset.
+          - A generator or `keras.utils.Sequence` instance.
+          A more detailed description of unpacking behavior for iterator types
+          (Dataset, generator, Sequence) is given in the `Unpacking behavior
+          for iterator-like inputs` section of `Model.fit`.
+        y: Target data. Like the input data `x`,
+          it could be either Numpy array(s) or TensorFlow tensor(s).
+          It should be consistent with `x` (you cannot have Numpy inputs and
+          tensor targets, or inversely).
+          If `x` is a dataset, generator or
+          `keras.utils.Sequence` instance, `y` should not be specified (since
+          targets will be obtained from the iterator/dataset).
+        batch_size: Integer or `None`.
+            Number of samples per gradient update.
+            If unspecified, `batch_size` will default to 32.
+            Do not specify the `batch_size` if your data is in the
+            form of symbolic tensors, dataset,
+            generators, or `keras.utils.Sequence` instances (since they generate
+            batches).
+        verbose: 0 or 1. Verbosity mode.
+            0 = silent, 1 = progress bar.
+        sample_weight: Optional Numpy array of weights for
+            the test samples, used for weighting the loss function.
+            You can either pass a flat (1D)
+            Numpy array with the same length as the input samples
+            (1:1 mapping between weights and samples),
+            or in the case of temporal data,
+            you can pass a 2D array with shape
+            `(samples, sequence_length)`,
+            to apply a different weight to every timestep of every sample.
+            In this case you should make sure to specify
+            `sample_weight_mode="temporal"` in `compile()`. This argument is not
+            supported when `x` is a dataset, instead pass
+            sample weights as the third element of `x`.
+        steps: Integer or `None`.
+            Total number of steps (batches of samples)
+            before declaring the evaluation round finished.
+            Ignored with the default value of `None`.
+            If x is a `tf.data` dataset and `steps` is
+            None, 'evaluate' will run until the dataset is exhausted.
+            This argument is not supported with array inputs.
+        callbacks: List of `keras.callbacks.Callback` instances.
+            List of callbacks to apply during evaluation.
+            See [callbacks](/api_docs/python/tf/keras/callbacks).
         max_queue_size: Integer. Used for generator or `keras.utils.Sequence`
           input only. Maximum size for the generator queue. If unspecified,
           `max_queue_size` will default to 10.
@@ -1293,6 +1331,9 @@ class Model(base_layer.Layer, version_utils.ModelVersionSelector):
         return_dict: If `True`, loss and metric results are returned as a dict,
           with each key being the name of the metric. If `False`, they are
           returned as a list.
+
+    See the discussion of `Unpacking behavior for iterator-like inputs` for
+    `Model.fit`.
 
     See the discussion of `Unpacking behavior for iterator-like inputs` for
     `Model.fit`.
@@ -1656,14 +1697,56 @@ class Model(base_layer.Layer, version_utils.ModelVersionSelector):
     """
     self._assert_compile_was_called()
     self._check_call_args('train_on_batch')
-    _disallow_inside_tf_function('train_on_batch')
-    with self.distribute_strategy.scope(), \
-         training_utils.RespectCompiledTrainableState(self):
-      iterator = data_adapter.single_batch_iterator(self.distribute_strategy, x,
-                                                    y, sample_weight,
-                                                    class_weight)
-      train_function = self.make_train_function()
-      logs = train_function(iterator)
+    if self._experimental_run_tf_function:
+      outputs = training_v2_utils.train_on_batch(
+          self, x, y=y, sample_weight=sample_weight,
+          class_weight=class_weight, reset_metrics=reset_metrics,
+          standalone=True)
+      outputs = (outputs['total_loss'] + outputs['output_losses'] +
+                 outputs['metrics'])
+      outputs = [
+          training_v2_utils._non_none_constant_value(v) for v in outputs]  # pylint: disable=protected-access
+      if len(outputs) == 1:
+        outputs = outputs[0]
+      return outputs
+
+    # If at this point we are in the replica context, then it is okay to execute
+    # the Eager code path.  The expected way to get here is to call `fit` that
+    # calls `train_on_batch` on each replica.
+    if (self._distribution_strategy and
+        distribution_strategy_context.in_cross_replica_context()):
+      raise NotImplementedError('`train_on_batch` is not supported for models '
+                                'distributed with tf.distribute.Strategy.')
+    # Validate and standardize user data.
+    x, y, sample_weights = self._standardize_user_data(
+        x, y, sample_weight=sample_weight, class_weight=class_weight,
+        extract_tensors_from_dataset=True)
+
+    # If `self._distribution_strategy` is True, then we are in a replica context
+    # at this point because of the check above.  `train_on_batch` is being run
+    # for each replica by `self._distribution_strategy` and the same code path
+    # as Eager is expected to be taken.
+    if self.run_eagerly or self._distribution_strategy:
+      output_dict = training_eager.train_on_batch(
+          self,
+          x,
+          y,
+          sample_weights=sample_weights,
+          output_loss_metrics=self._output_loss_metrics)
+      outputs = (output_dict['total_loss'] + output_dict['output_losses']
+                 + output_dict['metrics'])
+      outputs = [
+          training_v2_utils._non_none_constant_value(v) for v in outputs]  # pylint: disable=protected-access
+    else:
+      x = training_utils.ModelInputs(x).as_list()
+      ins = x + list(y or []) + list(sample_weights or [])
+
+      if not isinstance(K.symbolic_learning_phase(), int):
+        ins += [True]  # Add learning phase value.
+
+      self._update_sample_weight_modes(sample_weights=sample_weights)
+      self._make_train_function()
+      outputs = self.train_function(ins)  # pylint: disable=not-callable
 
     if reset_metrics:
       self.reset_metrics()
@@ -1716,12 +1799,46 @@ class Model(base_layer.Layer, version_utils.ModelVersionSelector):
     """
     self._assert_compile_was_called()
     self._check_call_args('test_on_batch')
-    _disallow_inside_tf_function('test_on_batch')
-    with self.distribute_strategy.scope():
-      iterator = data_adapter.single_batch_iterator(self.distribute_strategy, x,
-                                                    y, sample_weight)
-      test_function = self.make_test_function()
-      logs = test_function(iterator)
+    if self._experimental_run_tf_function:
+      outputs = training_v2_utils.test_on_batch(
+          self, x, y=y, sample_weight=sample_weight,
+          reset_metrics=reset_metrics, standalone=True)
+      outputs = (outputs['total_loss'] + outputs['output_losses'] +
+                 outputs['metrics'])
+      outputs = [
+          training_v2_utils._non_none_constant_value(v) for v in outputs]  # pylint: disable=protected-access
+      if len(outputs) == 1:
+        outputs = outputs[0]
+      return outputs
+
+    if (self._distribution_strategy and
+        distribution_strategy_context.in_cross_replica_context()):
+      raise NotImplementedError('`test_on_batch` is not supported for models '
+                                'distributed with tf.distribute.Strategy.')
+    # Validate and standardize user data.
+    x, y, sample_weights = self._standardize_user_data(
+        x, y, sample_weight=sample_weight, extract_tensors_from_dataset=True)
+
+    # If `self._distribution_strategy` is True, then we are in a replica context
+    # at this point.
+    if self.run_eagerly or self._distribution_strategy:
+      output_dict = training_eager.test_on_batch(
+          self,
+          x,
+          y,
+          sample_weights=sample_weights,
+          output_loss_metrics=self._output_loss_metrics)
+      outputs = (output_dict['total_loss'] + output_dict['output_losses']
+                 + output_dict['metrics'])
+      outputs = [
+          training_v2_utils._non_none_constant_value(v) for v in outputs]  # pylint: disable=protected-access
+    else:
+      x = training_utils.ModelInputs(x).as_list()
+      inputs = x + list(y or []) + list(sample_weights or [])
+
+      self._update_sample_weight_modes(sample_weights=sample_weights)
+      self._make_test_function()
+      outputs = self.test_function(inputs)  # pylint: disable=not-callable
 
     if reset_metrics:
       self.reset_metrics()
@@ -1750,12 +1867,34 @@ class Model(base_layer.Layer, version_utils.ModelVersionSelector):
           expectations of the model.
     """
     self._check_call_args('predict_on_batch')
-    _disallow_inside_tf_function('predict_on_batch')
-    with self.distribute_strategy.scope():
-      iterator = data_adapter.single_batch_iterator(self.distribute_strategy, x)
-      predict_function = self.make_predict_function()
-      outputs = predict_function(iterator)
-    return tf_utils.to_numpy_or_python_type(outputs)
+    if self._experimental_run_tf_function:
+      return training_v2_utils.predict_on_batch(self, x, standalone=True)
+
+    if (self._distribution_strategy and
+        distribution_strategy_context.in_cross_replica_context()):
+      raise NotImplementedError(
+          '`predict_on_batch` is not supported for models distributed with'
+          ' tf.distribute.Strategy.')
+    # Validate and standardize user data.
+    inputs, _, _ = self._standardize_user_data(
+        x, extract_tensors_from_dataset=True)
+    # If `self._distribution_strategy` is True, then we are in a replica context
+    # at this point.
+    if self.run_eagerly or self._distribution_strategy:
+      inputs = training_utils.cast_if_floating_dtype(inputs)
+      if isinstance(inputs, collections_abc.Sequence):
+        # Unwrap lists with only one input, as we do when training on batch
+        if len(inputs) == 1:
+          inputs = inputs[0]
+
+      return self(inputs)  # pylint: disable=not-callable
+
+    self._make_predict_function()
+    outputs = self.predict_function(inputs)
+
+    if len(outputs) == 1:
+      return outputs[0]
+    return outputs
 
   @deprecation.deprecated(
       None, 'Please use Model.fit, which supports generators.')

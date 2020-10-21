@@ -220,11 +220,14 @@ build --define=grpc_no_ares=true
 # TODO: Remove this line once TF doesn't depend on Bazel wrapping all library
 # archives in -whole_archive -no_whole_archive.
 build --noincompatible_remove_legacy_whole_archive
+<<<<<<< HEAD
 
 # These are bazel 2.0's incompatible flags. Tensorflow needs to use bazel 2.0.0
 # to use cc_shared_library, as part of the Tensorflow Build Improvements RFC:
 # https://github.com/tensorflow/community/pull/179
 build --noincompatible_prohibit_aapt1
+=======
+>>>>>>> nebranch
 
 # Modular TF build options
 build:dynamic_kernels --define=dynamic_loaded_kernels=true
@@ -235,6 +238,7 @@ build:c++17 --cxxopt=-std=c++1z
 build:c++17 --cxxopt=-stdlib=libc++
 build:c++1z --config=c++17
 
+<<<<<<< HEAD
 # Enable using platform specific build settings
 build --enable_platform_specific_config
 
@@ -247,6 +251,11 @@ build:windows --copt=/w
 # _USE_MATH_DEFINES is defined.
 build:windows --copt=/D_USE_MATH_DEFINES
 build:windows --host_copt=/D_USE_MATH_DEFINES
+=======
+# Tensorflow uses M_* math constants that only get defined by MSVC headers if
+# _USE_MATH_DEFINES is defined.
+build:windows --copt=/D_USE_MATH_DEFINES
+>>>>>>> nebranch
 
 # Default paths for TF_SYSTEM_LIBS
 build:linux --define=PREFIX=/usr

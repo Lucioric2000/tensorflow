@@ -434,9 +434,9 @@ class ShuffleDatasetOpBase::ShuffleDatasetBase : public DatasetBase {
     std::deque<std::unique_ptr<Slice>> slices_ TF_GUARDED_BY(mu_);
     random::PhiloxRandom parent_generator_ TF_GUARDED_BY(mu_);
     random::SingleSampleAdapter<random::PhiloxRandom> generator_
-        TF_GUARDED_BY(mu_);
-    int64 num_random_samples_ TF_GUARDED_BY(mu_) = 0;
-    bool data_produced_ TF_GUARDED_BY(mu_) = false;
+        GUARDED_BY(mu_);
+    int64 num_random_samples_ GUARDED_BY(mu_) = 0;
+    bool data_produced_ GUARDED_BY(mu_) = false;
   };
 
   const DatasetBase* const input_;
